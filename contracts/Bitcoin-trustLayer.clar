@@ -132,3 +132,105 @@
 )
 
 
+;; Complete payment
+(define-public (complete-payment (payment-id uint))
+  (let 
+    (
+      (payment (unwrap! (map-get? payments { id: payment-id }) ERR-NO-PAYMENT))
+    )
+    (asserts! (is-eq tx-sender (get from payment)) ERR-NO-AUTH)
+
+    ;; Process the payment
+    (try! (stx-transfer? 
+      (get amount payment) 
+      tx-sender 
+      (get to payment)
+    ))
+
+    ;; Update payment status
+    (map-set payments 
+      { id: payment-id }
+      (merge payment { is-complete: true })
+    )
+
+    ;; Return success
+    (ok true)
+  )
+)
+
+;; Add trust rating
+(define-public (rate-counterparty 
+  (deal-id uint) 
+  (rating uint)
+)
+  (begin
+    ;; Validate deal
+    (asserts! (validate-deal-id deal-id) ERR-INVALID-DEAL-ID)
+
+    (let 
+      (
+        (deal (unwrap! 
+          (map-get? deals { deal-id: deal-id }) 
+          ERR-DEAL-NOT-EXIST
+        ))
+        (initiator (get initiator deal))
+        (counterparty (get counterparty deal))
+      )
+      ;; Verify rater
+      (asserts! 
+        (is-eq tx-sender counterparty) 
+        ERR-NOT-AUTHORIZED
+      )
+      (asserts! (> rating u0) ERR-BAD-RATING)
+
+      ;; Update trust profile
+      (map-set trust-profiles 
+        { address: initiator }
+        {
+          cumulative-score: (+ 
+            (get cumulative-score 
+              (default-to 
+                { cumulative-score: u0, deal-count: u0 } 
+                (map-get? trust-profiles { address: initiator })
+              )
+            )
+            rating
+          ),
+          deal-count: (+ 
+            (get deal-count 
+              (default-to 
+                { cumulative-score: u0, deal-count: u0 } 
+                (map-get? trust-profiles { address: initiator })
+              )
+            )
+            u1
+          )
+        }
+      )
+
+      ;; Update deal rating
+      (map-set deals 
+        { deal-id: deal-id }
+        (merge deal { trust-score: rating })
+      )
+
+      (ok true)
+    )
+  )
+)
+
+;; Query trust profile
+(define-read-only (get-trust-profile (address principal))
+  (default-to 
+    { cumulative-score: u0, deal-count: u0 }
+    (map-get? trust-profiles { address: address })
+  )
+)
+
+;; Get payment details
+(define-read-only (get-payment-info (payment-id uint))
+  (map-get? payments { id: payment-id }))
+;; Query deal information
+(define-read-only (get-deal-info (deal-id uint))
+  (map-get? deals { deal-id: deal-id })
+)

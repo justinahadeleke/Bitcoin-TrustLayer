@@ -1,11 +1,11 @@
 
 #  Bitcoin-TrustLayer: A Escrow System for Secure Peer-to-Peer Transactions
 
-TrustBridge is a decentralized escrow and trust protocol that facilitates secure and transparent peer-to-peer (P2P) transactions on the [Stacks blockchain](https://www.stacks.co/). It leverages smart contracts to manage deals, payments, and reputation scoring, enabling users to transact with greater confidence and reduced risk.
+TrustLayer is a decentralized escrow and trust protocol that facilitates secure and transparent peer-to-peer (P2P) transactions on the [Stacks blockchain](https://www.stacks.co/). It leverages smart contracts to manage deals, payments, and reputation scoring, enabling users to transact with greater confidence and reduced risk.
 
 ## Overview
 
-TrustBridge allows two parties to:
+TrustLayer allows two parties to:
 
 - Initiate a deal with an escrowed amount.
 - Complete the payment only upon confirmation.
